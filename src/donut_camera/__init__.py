@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from donut-camera!")
+"""Clean experiments for Donut characterization and acceleration."""

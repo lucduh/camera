@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Confidential inputs and potentially identifying debug output
+data/
+debug/
+
+# Large/generated artifacts
+checkpoints/*
+!checkpoints/.gitkeep
+results/*
+!results/.gitkeep

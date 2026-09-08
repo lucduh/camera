@@ -1,0 +1,17 @@
+name = "kpid"
+task_token = "<s_donut>"
+missing_token = "<missing>"
+fields = [
+  "birth_date",
+  "birth_name",
+  "birth_place",
+  "document_number",
+  "document_type",
+  "expiration_date",
+  "first_name",
+  "issuing_country",
+  "last_name",
+  "maiden_name",
+  "mrz_strip",
+  "nationality",
+]

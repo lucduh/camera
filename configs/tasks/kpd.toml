@@ -1,0 +1,17 @@
+name = "kpd"
+task_token = "<s_donut>"
+missing_token = "<missing>"
+fields = [
+  "birth_date",
+  "birth_name",
+  "birth_place",
+  "death_date",
+  "death_place",
+  "declarant",
+  "first_name",
+  "gender",
+  "home_adress",
+  "marginal_mention",
+  "marital_status",
+  "used_name",
+]

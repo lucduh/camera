@@ -1,0 +1,13 @@
+name = "br"
+task_token = "<s_donut>"
+missing_token = "<missing>"
+fields = [
+  "numero_da_nota",
+  "data_emissao",
+  "cpf_cnpj_prestador",
+  "cep_prestador",
+  "cpf_cnpj_tomador",
+  "servico_prestado",
+  "valor_da_nota",
+  "calculo_do_imposto",
+]
