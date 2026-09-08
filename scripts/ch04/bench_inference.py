@@ -25,15 +25,20 @@ def encode_model(model, pixels):
 
 
 def generate_model(model, pixels, prompt, output_length, encoder_outputs=None):
+    arguments = {
+        "pixel_values": pixels,
+        "decoder_input_ids": prompt,
+        "min_new_tokens": output_length,
+        "max_new_tokens": output_length,
+        "use_cache": True,
+    }
+    # Passing encoder_outputs=None is not equivalent to omitting it: generation
+    # assumes encoding has already happened and later asks the vision encoder for
+    # pixel values. Add the argument only for the isolated-decoder measurement.
+    if encoder_outputs is not None:
+        arguments["encoder_outputs"] = encoder_outputs
     with torch.inference_mode():
-        return model.generate(
-            pixel_values=pixels,
-            encoder_outputs=encoder_outputs,
-            decoder_input_ids=prompt,
-            min_new_tokens=output_length,
-            max_new_tokens=output_length,
-            use_cache=True,
-        )
+        return model.generate(**arguments)
 
 
 def main() -> None:

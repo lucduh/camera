@@ -67,14 +67,15 @@ def configure_model(model, processor: DonutProcessor, task: TaskSpec) -> None:
     task_id = processor.tokenizer.convert_tokens_to_ids(task.task_token)
     if task_id == processor.tokenizer.unk_token_id:
         raise ValueError(f"Task token {task.task_token!r} is not registered")
-    # Chapter 4 uses an explicit eager decoder baseline. Optimized decoder
-    # implementations are introduced as controlled factors in Chapter 5.
-    model.decoder.config._attn_implementation = "eager"
     model.config.pad_token_id = processor.tokenizer.pad_token_id
     model.config.decoder_start_token_id = task_id
     model.generation_config.pad_token_id = processor.tokenizer.pad_token_id
     model.generation_config.eos_token_id = processor.tokenizer.eos_token_id
     model.generation_config.decoder_start_token_id = task_id
+    # The pretrained checkpoint carries stale absolute length defaults. All
+    # callers use max_new_tokens, and controlled benchmarks also use
+    # min_new_tokens, so clear both absolute-length settings.
+    model.generation_config.min_length = None
     model.generation_config.max_length = None
 
 
@@ -85,6 +86,7 @@ def load_bundle(
     device: str | None = None,
     dtype: str = "bf16",
     training: bool = False,
+    attention_implementation: str = "eager",
 ) -> DonutBundle:
     device = resolve_device(device)
     if dtype not in DTYPES:
@@ -92,7 +94,11 @@ def load_bundle(
     model_dtype = torch.float32 if training else DTYPES[dtype]
     processor = DonutProcessor.from_pretrained(source)
     register_task_tokens(processor, task)
-    model = VisionEncoderDecoderModel.from_pretrained(source, dtype=model_dtype)
+    model = VisionEncoderDecoderModel.from_pretrained(
+        source,
+        dtype=model_dtype,
+        attn_implementation=attention_implementation,
+    )
     configure_model(model, processor, task)
     model.to(device)
     model.train(training)
