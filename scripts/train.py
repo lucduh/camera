@@ -24,6 +24,16 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument(
+        "--limit-train-batches",
+        type=int,
+        help="Smoke-test only: stop each epoch after this many batches",
+    )
+    parser.add_argument(
+        "--limit-validation-batches",
+        type=int,
+        help="Smoke-test only: validate on only this many batches",
+    )
     parser.add_argument("--learning-rate", type=float, default=3e-4)
     parser.add_argument("--weight-decay", type=float, default=0.01)
     parser.add_argument("--warmup-steps", type=int, default=100)
@@ -46,6 +56,8 @@ def main() -> None:
         batch_size=args.batch_size,
         workers=args.workers,
         epochs=args.epochs,
+        limit_train_batches=args.limit_train_batches,
+        limit_validation_batches=args.limit_validation_batches,
         learning_rate=args.learning_rate,
         weight_decay=args.weight_decay,
         warmup_steps=args.warmup_steps,

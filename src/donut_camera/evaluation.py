@@ -60,9 +60,12 @@ def evaluate(
     batch_size: int,
     workers: int,
     max_new_tokens: int,
+    limit: int | None = None,
     debug_output: str | Path | None = None,
 ) -> dict:
     samples = load_samples(data_json)
+    if limit is not None:
+        samples = samples[:limit]
     loader = DataLoader(
         EvaluationDataset(samples, bundle.processor),
         batch_size=batch_size,

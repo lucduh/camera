@@ -28,6 +28,8 @@ class TrainingConfig:
     batch_size: int
     workers: int
     epochs: int
+    limit_train_batches: int | None
+    limit_validation_batches: int | None
     learning_rate: float
     weight_decay: float
     warmup_steps: int
@@ -58,10 +60,19 @@ def make_loader(dataset, *, batch_size: int, workers: int, shuffle: bool, seed: 
 
 
 @torch.no_grad()
-def validation_loss(model, loader, *, device: str, precision: str) -> float:
+def validation_loss(
+    model,
+    loader,
+    *,
+    device: str,
+    precision: str,
+    limit_batches: int | None = None,
+) -> float:
     model.eval()
     losses = []
-    for batch in loader:
+    for batch_index, batch in enumerate(loader):
+        if limit_batches is not None and batch_index >= limit_batches:
+            break
         pixels = batch["pixel_values"].to(device, non_blocking=True)
         labels = batch["labels"].to(device, non_blocking=True)
         with autocast(device, precision):
@@ -111,7 +122,10 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
         lr=config.learning_rate,
         weight_decay=config.weight_decay,
     )
-    total_steps = len(train_loader) * config.epochs
+    steps_per_epoch = len(train_loader)
+    if config.limit_train_batches is not None:
+        steps_per_epoch = min(steps_per_epoch, config.limit_train_batches)
+    total_steps = steps_per_epoch * config.epochs
     scheduler = get_linear_schedule_with_warmup(
         optimizer,
         num_warmup_steps=config.warmup_steps,
@@ -127,7 +141,15 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
         started = time.perf_counter()
         loss_sum = 0.0
         documents = 0
-        for batch in tqdm(train_loader, desc=f"epoch {epoch}/{config.epochs}"):
+        steps = 0
+        for batch_index, batch in enumerate(
+            tqdm(train_loader, desc=f"epoch {epoch}/{config.epochs}")
+        ):
+            if (
+                config.limit_train_batches is not None
+                and batch_index >= config.limit_train_batches
+            ):
+                break
             pixels = batch["pixel_values"].to(config.device, non_blocking=True)
             labels = batch["labels"].to(config.device, non_blocking=True)
             with autocast(config.device, config.precision):
@@ -139,6 +161,7 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
             optimizer.zero_grad(set_to_none=True)
             loss_sum += loss.item()
             documents += pixels.shape[0]
+            steps += 1
         synchronize()
         epoch_seconds = time.perf_counter() - started
         val_loss = validation_loss(
@@ -146,12 +169,13 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
             validation_loader,
             device=config.device,
             precision=config.precision,
+            limit_batches=config.limit_validation_batches,
         )
         row = {
             "epoch": epoch,
             "documents": documents,
-            "steps": len(train_loader),
-            "train_loss": loss_sum / len(train_loader),
+            "steps": steps,
+            "train_loss": loss_sum / steps if steps else float("nan"),
             "validation_loss": val_loss,
             "wall_seconds": epoch_seconds,
             "documents_per_second": documents / epoch_seconds,

@@ -20,6 +20,7 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=1440)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
+    parser.add_argument("--limit", type=int, help="Smoke-test only: evaluate a prefix")
     parser.add_argument(
         "--max-new-tokens",
         type=int,
@@ -45,6 +46,7 @@ def main() -> None:
         batch_size=args.batch_size,
         workers=args.workers,
         max_new_tokens=max_new_tokens,
+        limit=args.limit,
         debug_output=args.debug_output,
     )
     path = write_record(
@@ -57,6 +59,7 @@ def main() -> None:
             "width": args.width,
             "batch_size": args.batch_size,
             "workers": args.workers,
+            "limit": args.limit,
             "max_new_tokens": max_new_tokens,
             "dtype": args.dtype,
             "device": device,
