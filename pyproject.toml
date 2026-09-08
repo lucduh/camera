@@ -3,9 +3,6 @@ name = "donut-camera"
 version = "0.1.0"
 description = "Reproducible Donut experiments for profiling, attention, and structured decoding"
 readme = "README.md"
-authors = [
-    { name = "Fotis Kapotos", email = "fotiskapotos@gmail.com" }
-]
 requires-python = ">=3.11"
 dependencies = [
     "pillow>=10",
