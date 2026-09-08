@@ -22,8 +22,8 @@
 - [x] Evaluation command with sanitized per-document records
 - [x] Audit BR training schema and untruncated target lengths
 - [x] Classify BR duplicate fields and adopt a first-occurrence policy
-- [ ] Verify BR test schema and target lengths
-- [ ] Freeze the BR validation split
+- [x] Verify BR test schema and target lengths
+- [ ] Create and freeze the BR validation split (10%, seed 42 proposed)
 - [ ] Complete a BR smoke train/save/reload/evaluate run
 - [ ] Freeze canonical fine-tuning hyperparameters
 
@@ -37,7 +37,8 @@
 - six targets exceed 64 tokens
 - 1,071 documents contain at least one duplicate field
 - most conflicting groups are rare; `numero_da_nota` has 124
-- training and generation limit: 80 tokens
+- BR test targets have fewer conflicting groups and a maximum of 64 tokens
+- training and generation limit: 80 tokens, determined by the training maximum
 
 Repeated annotations use an explicit first-occurrence policy, matching source
 JSON order. This is recorded in the BR task configuration and experiment

@@ -25,6 +25,17 @@ uv run python scripts/audit_data.py \
   --output results/audits/br-train.json
 ```
 
+Create a persistent 90/10 training and validation split when no validation set exists:
+
+```bash
+uv run python scripts/split_data.py \
+  --data /secure/path/br/train.json \
+  --train-output /secure/path/br/train_fit.json \
+  --validation-output /secure/path/br/validation.json \
+  --manifest /secure/path/br/split_manifest.json \
+  --validation-fraction 0.10 --seed 42
+```
+
 Fine-tune with explicit train and validation splits:
 
 ```bash
