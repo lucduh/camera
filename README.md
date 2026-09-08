@@ -60,6 +60,39 @@ uv run python scripts/evaluate.py \
 
 Use `--debug-output debug/...` only when predictions must be inspected. Debug files can contain confidential values and are ignored by Git.
 
+## Chapter 4 controlled experiments
+
+Record the architecture:
+
+```bash
+uv run python scripts/ch04/inventory.py \
+  --task configs/tasks/br.toml \
+  --checkpoint checkpoints/br-smoke/best \
+  --output results/ch04/inventory.json
+```
+
+Run resolution-by-length inference at batch size one:
+
+```bash
+uv run python scripts/ch04/bench_inference.py \
+  --task configs/tasks/br.toml \
+  --checkpoint checkpoints/br-smoke/best \
+  --output results/ch04/inference-resolution-length.json
+```
+
+Run the corresponding controlled training-step experiment:
+
+```bash
+uv run python scripts/ch04/bench_training.py \
+  --task configs/tasks/br.toml \
+  --checkpoint checkpoints/br-smoke/best \
+  --output results/ch04/training-resolution-length.json
+```
+
+Batch scaling is a separate invocation, for example with
+`--resolutions 1920x1440 --batch-sizes 1,2,4,8 --output-lengths 64` for
+inference or `--target-lengths 64` for training.
+
 ## Development
 
 ```bash

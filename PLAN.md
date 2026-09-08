@@ -24,7 +24,7 @@
 - [x] Classify BR duplicate fields and adopt a first-occurrence policy
 - [x] Verify BR test schema and target lengths
 - [x] Create and freeze the BR validation split (10%, seed 42)
-- [ ] Complete a BR smoke train/save/reload/evaluate run
+- [x] Complete a BR smoke train/save/reload/evaluate run
 - [ ] Freeze canonical fine-tuning hyperparameters
 
 ## Current BR audit

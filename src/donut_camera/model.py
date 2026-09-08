@@ -67,6 +67,9 @@ def configure_model(model, processor: DonutProcessor, task: TaskSpec) -> None:
     task_id = processor.tokenizer.convert_tokens_to_ids(task.task_token)
     if task_id == processor.tokenizer.unk_token_id:
         raise ValueError(f"Task token {task.task_token!r} is not registered")
+    # Chapter 4 uses an explicit eager decoder baseline. Optimized decoder
+    # implementations are introduced as controlled factors in Chapter 5.
+    model.decoder.config._attn_implementation = "eager"
     model.config.pad_token_id = processor.tokenizer.pad_token_id
     model.config.decoder_start_token_id = task_id
     model.generation_config.pad_token_id = processor.tokenizer.pad_token_id
