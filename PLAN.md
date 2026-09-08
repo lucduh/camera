@@ -21,7 +21,7 @@
 - [x] Explicit-split training command
 - [x] Evaluation command with sanitized per-document records
 - [x] Audit BR training schema and untruncated target lengths
-- [ ] Classify BR duplicate fields as identical or conflicting
+- [x] Classify BR duplicate fields and adopt a first-occurrence policy
 - [ ] Verify BR test schema and target lengths
 - [ ] Freeze the BR validation split
 - [ ] Complete a BR smoke train/save/reload/evaluate run
@@ -36,11 +36,13 @@
 - maximum target length: 67 tokens
 - six targets exceed 64 tokens
 - 1,071 documents contain at least one duplicate field
-- provisional training and generation limit: 80 tokens
+- most conflicting groups are rare; `numero_da_nota` has 124
+- training and generation limit: 80 tokens
 
-The duplicate groups must be classified before training. Identical repeated
-annotations can be deduplicated safely; conflicting values require an explicit
-annotation policy and must not be resolved silently.
+Repeated annotations use an explicit first-occurrence policy, matching source
+JSON order. This is recorded in the BR task configuration and experiment
+metadata. The 124 conflicting `numero_da_nota` groups remain a dataset-quality
+limitation to mention in the report, not a blocker for profiling.
 
 ## Chapter 4 — Computational characterization
 

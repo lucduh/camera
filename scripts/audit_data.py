@@ -134,6 +134,7 @@ def main() -> None:
             "task": task.name,
             "data_file": args.data.name,
             "processor": args.processor,
+            "duplicate_policy": task.duplicate_policy,
             "images_checked": not args.skip_images,
         },
         measurements=measurements,

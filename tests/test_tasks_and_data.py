@@ -1,7 +1,13 @@
 import json
 from pathlib import Path
 
-from donut_camera.data import Sample, format_target, load_samples, parse_output
+from donut_camera.data import (
+    Sample,
+    format_target,
+    load_samples,
+    parse_output,
+    values_by_field,
+)
 from donut_camera.tasks import TaskSpec, load_task
 
 
@@ -25,6 +31,19 @@ def test_target_and_parser_round_trip() -> None:
     parsed = parse_output(f"<s_donut>{target}</s>", task)
     assert parsed.valid
     assert parsed.fields == {"name": "Alice", "date": ""}
+
+
+def test_duplicate_policy_is_explicit() -> None:
+    sample = Sample(
+        document_id="1",
+        image=Path("unused.png"),
+        fields=(
+            {"field_name": "source/number", "annotator_text": "first"},
+            {"field_name": "other/number", "annotator_text": "second"},
+        ),
+    )
+    assert values_by_field(sample, duplicate_policy="first") == {"number": "first"}
+    assert values_by_field(sample, duplicate_policy="last") == {"number": "second"}
 
 
 def test_parser_detects_missing_tags() -> None:

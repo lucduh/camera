@@ -92,7 +92,9 @@ def evaluate(
             parsed = parse_output(text, bundle.task)
             reference = {
                 field: value
-                for field, value in values_by_field(sample).items()
+                for field, value in values_by_field(
+                    sample, duplicate_policy=bundle.task.duplicate_policy
+                ).items()
                 if field in bundle.task.fields
             }
             records.append(

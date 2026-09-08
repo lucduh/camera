@@ -47,17 +47,23 @@ def load_samples(path: str | Path) -> list[Sample]:
     return samples
 
 
-def values_by_field(sample: Sample) -> dict[str, str]:
+def values_by_field(
+    sample: Sample, *, duplicate_policy: str = "first"
+) -> dict[str, str]:
+    """Return one value per field using the declared duplicate policy."""
+    if duplicate_policy not in {"first", "last"}:
+        raise ValueError("duplicate_policy must be 'first' or 'last'")
     values: dict[str, str] = {}
     for annotation in sample.fields:
         field = field_leaf(str(annotation["field_name"]))
-        if field not in values:
-            values[field] = str(annotation.get("annotator_text", "")).strip()
+        value = str(annotation.get("annotator_text", "")).strip()
+        if duplicate_policy == "last" or field not in values:
+            values[field] = value
     return values
 
 
 def format_target(sample: Sample, task: TaskSpec) -> str:
-    values = values_by_field(sample)
+    values = values_by_field(sample, duplicate_policy=task.duplicate_policy)
     parts = []
     for field in task.fields:
         value = values.get(field, "") or task.missing_token

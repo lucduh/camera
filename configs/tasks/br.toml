@@ -4,6 +4,9 @@ missing_token = "<missing>"
 # Train targets are 56 tokens at the median and 67 at the observed maximum.
 max_target_length = 80
 max_new_tokens = 80
+# Some documents contain repeated annotations. Keep the first occurrence,
+# matching the order in the source JSON.
+duplicate_policy = "first"
 fields = [
   "numero_da_nota",
   "data_emissao",

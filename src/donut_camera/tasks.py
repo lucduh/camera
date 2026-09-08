@@ -11,6 +11,7 @@ class TaskSpec:
     missing_token: str = "<missing>"
     max_target_length: int = 256
     max_new_tokens: int = 256
+    duplicate_policy: str = "first"
 
     def __post_init__(self) -> None:
         if not self.name:
@@ -21,6 +22,8 @@ class TaskSpec:
             raise ValueError(f"Task {self.name!r} contains duplicate fields")
         if self.max_target_length < 1 or self.max_new_tokens < 1:
             raise ValueError("Target and generation lengths must be positive")
+        if self.duplicate_policy not in {"first", "last"}:
+            raise ValueError("duplicate_policy must be 'first' or 'last'")
 
     @property
     def structural_tokens(self) -> tuple[str, ...]:
@@ -49,4 +52,5 @@ def load_task(path: str | Path) -> TaskSpec:
         missing_token=raw.get("missing_token", "<missing>"),
         max_target_length=raw.get("max_target_length", 256),
         max_new_tokens=raw.get("max_new_tokens", 256),
+        duplicate_policy=raw.get("duplicate_policy", "first"),
     )
