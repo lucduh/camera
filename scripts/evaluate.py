@@ -20,7 +20,11 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=1440)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--max-new-tokens", type=int, default=256)
+    parser.add_argument(
+        "--max-new-tokens",
+        type=int,
+        help="Defaults to max_new_tokens from the task configuration",
+    )
     parser.add_argument("--dtype", choices=("bf16", "fp16", "fp32"), default="bf16")
     parser.add_argument("--device")
     args = parser.parse_args()
@@ -34,12 +38,13 @@ def main() -> None:
         dtype=args.dtype,
     )
     bundle.set_resolution(args.height, args.width)
+    max_new_tokens = args.max_new_tokens or task.max_new_tokens
     measurements = evaluate(
         bundle,
         args.data,
         batch_size=args.batch_size,
         workers=args.workers,
-        max_new_tokens=args.max_new_tokens,
+        max_new_tokens=max_new_tokens,
         debug_output=args.debug_output,
     )
     path = write_record(
@@ -52,7 +57,7 @@ def main() -> None:
             "width": args.width,
             "batch_size": args.batch_size,
             "workers": args.workers,
-            "max_new_tokens": args.max_new_tokens,
+            "max_new_tokens": max_new_tokens,
             "dtype": args.dtype,
             "device": device,
         },

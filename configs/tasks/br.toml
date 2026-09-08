@@ -1,6 +1,9 @@
 name = "br"
 task_token = "<s_donut>"
 missing_token = "<missing>"
+# Train targets are 56 tokens at the median and 67 at the observed maximum.
+max_target_length = 80
+max_new_tokens = 80
 fields = [
   "numero_da_nota",
   "data_emissao",

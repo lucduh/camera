@@ -2,7 +2,8 @@
 
 ## Rules
 
-- BR is the primary task; KPID and KPD provide coverage.
+- BR is the only implementation and execution focus for the current phase.
+- Report tables retain KPID and KPD rows, left empty until later coverage runs.
 - Standard resolutions are 1280x960, 1920x1440, and 2560x1920.
 - Use explicit train, validation, and test splits.
 - Save raw measurements and environment metadata in JSON.
@@ -19,11 +20,27 @@
 - [x] Minimal model loading and resolution configuration
 - [x] Explicit-split training command
 - [x] Evaluation command with sanitized per-document records
-- [ ] Verify field spellings against all three real datasets
-- [ ] Freeze validation splits
-- [ ] Audit untruncated target lengths
+- [x] Audit BR training schema and untruncated target lengths
+- [ ] Classify BR duplicate fields as identical or conflicting
+- [ ] Verify BR test schema and target lengths
+- [ ] Freeze the BR validation split
 - [ ] Complete a BR smoke train/save/reload/evaluate run
 - [ ] Freeze canonical fine-tuning hyperparameters
+
+## Current BR audit
+
+- 3,773 training documents
+- no empty annotations
+- no unknown fields
+- median target length: 56 tokens
+- maximum target length: 67 tokens
+- six targets exceed 64 tokens
+- 1,071 documents contain at least one duplicate field
+- provisional training and generation limit: 80 tokens
+
+The duplicate groups must be classified before training. Identical repeated
+annotations can be deduplicated safely; conflicting values require an explicit
+annotation policy and must not be resolved silently.
 
 ## Chapter 4 — Computational characterization
 
@@ -38,8 +55,9 @@
 8. Real training-pipeline profile including DataLoader wait and transfer.
 9. Historical/current/cached shifted-window mask reproduction.
 
-BR receives the complete grid. KPID and KPD receive baseline quality/training,
-real inference, and selected low/high-resolution confirmation runs.
+BR receives the complete grid. KPID and KPD remain represented by empty report
+table rows during this phase; their future runs only need quality and selected
+confirmation measurements because the model architecture is unchanged.
 
 ## Chapter 5 — Attention acceleration
 

@@ -50,6 +50,11 @@ def main() -> None:
     field_counts: Counter[str] = Counter()
     empty_counts: Counter[str] = Counter()
     duplicate_documents = 0
+    duplicate_groups: Counter[str] = Counter()
+    duplicate_extra_annotations: Counter[str] = Counter()
+    identical_duplicate_groups: Counter[str] = Counter()
+    conflicting_duplicate_groups: Counter[str] = Counter()
+    maximum_occurrences: Counter[str] = Counter()
     unknown_fields: Counter[str] = Counter()
     token_lengths = []
     widths = []
@@ -58,13 +63,29 @@ def main() -> None:
 
     for sample in samples:
         names = [field_leaf(str(field["field_name"])) for field in sample.fields]
-        duplicate_documents += int(len(names) != len(set(names)))
+        values_by_name: dict[str, list[str]] = {}
         for annotation, name in zip(sample.fields, names, strict=True):
+            value = str(annotation.get("annotator_text", "")).strip()
+            values_by_name.setdefault(name, []).append(value)
             field_counts[name] += 1
-            if not str(annotation.get("annotator_text", "")).strip():
+            if not value:
                 empty_counts[name] += 1
             if name not in task.fields:
                 unknown_fields[name] += 1
+
+        duplicated = False
+        for name, values in values_by_name.items():
+            maximum_occurrences[name] = max(maximum_occurrences[name], len(values))
+            if len(values) < 2:
+                continue
+            duplicated = True
+            duplicate_groups[name] += 1
+            duplicate_extra_annotations[name] += len(values) - 1
+            if len(set(values)) == 1:
+                identical_duplicate_groups[name] += 1
+            else:
+                conflicting_duplicate_groups[name] += 1
+        duplicate_documents += int(duplicated)
         target = format_target(sample, task) + processor.tokenizer.eos_token
         token_lengths.append(
             len(processor.tokenizer(target, add_special_tokens=False).input_ids)
@@ -84,14 +105,27 @@ def main() -> None:
         "field_counts": dict(sorted(field_counts.items())),
         "empty_counts": dict(sorted(empty_counts.items())),
         "unknown_fields": dict(sorted(unknown_fields.items())),
-        "documents_with_duplicate_fields": duplicate_documents,
+        "duplicates": {
+            "documents": duplicate_documents,
+            "groups_by_field": dict(sorted(duplicate_groups.items())),
+            "extra_annotations_by_field": dict(
+                sorted(duplicate_extra_annotations.items())
+            ),
+            "identical_groups_by_field": dict(
+                sorted(identical_duplicate_groups.items())
+            ),
+            "conflicting_groups_by_field": dict(
+                sorted(conflicting_duplicate_groups.items())
+            ),
+            "maximum_occurrences_by_field": dict(sorted(maximum_occurrences.items())),
+        },
         "unreadable_images": unreadable_images,
         "image_width": distribution(widths),
         "image_height": distribution(heights),
         "target_tokens": distribution(token_lengths),
         "truncation": {
             str(limit): sum(length > limit for length in token_lengths)
-            for limit in (64, 128, 256, 512)
+            for limit in (64, 80, 96, 128, 256, 512)
         },
     }
     path = write_record(
