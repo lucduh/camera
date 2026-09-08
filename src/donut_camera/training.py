@@ -67,9 +67,12 @@ def validation_loss(
     device: str,
     precision: str,
     limit_batches: int | None = None,
-) -> float:
+) -> tuple[float, int, int, float]:
     model.eval()
     losses = []
+    documents = 0
+    synchronize()
+    started = time.perf_counter()
     for batch_index, batch in enumerate(loader):
         if limit_batches is not None and batch_index >= limit_batches:
             break
@@ -77,7 +80,11 @@ def validation_loss(
         labels = batch["labels"].to(device, non_blocking=True)
         with autocast(device, precision):
             losses.append(model(pixel_values=pixels, labels=labels).loss.item())
-    return sum(losses) / len(losses) if losses else float("nan")
+        documents += pixels.shape[0]
+    synchronize()
+    seconds = time.perf_counter() - started
+    mean_loss = sum(losses) / len(losses) if losses else float("nan")
+    return mean_loss, documents, len(losses), seconds
 
 
 def train(task: TaskSpec, config: TrainingConfig) -> Path:
@@ -132,12 +139,28 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
         num_training_steps=total_steps,
     )
 
+    cuda_device = (
+        torch.device(config.device)
+        if torch.device(config.device).type == "cuda"
+        else None
+    )
     history = []
     best_loss = float("inf")
+    best_epoch = None
+    overall_peak_mb = 0.0
     optimizer.zero_grad(set_to_none=True)
+    synchronize()
+    loop_started = time.perf_counter()
     for epoch in range(1, config.epochs + 1):
         model.train()
         synchronize()
+        start_allocated = (
+            torch.cuda.memory_allocated(cuda_device)
+            if cuda_device is not None
+            else None
+        )
+        if cuda_device is not None:
+            torch.cuda.reset_peak_memory_stats(cuda_device)
         started = time.perf_counter()
         loss_sum = 0.0
         documents = 0
@@ -164,32 +187,62 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
             steps += 1
         synchronize()
         epoch_seconds = time.perf_counter() - started
-        val_loss = validation_loss(
-            model,
-            validation_loader,
-            device=config.device,
-            precision=config.precision,
-            limit_batches=config.limit_validation_batches,
+        val_loss, validation_documents, validation_batches, validation_seconds = (
+            validation_loss(
+                model,
+                validation_loader,
+                device=config.device,
+                precision=config.precision,
+                limit_batches=config.limit_validation_batches,
+            )
         )
+        peak_allocated = (
+            torch.cuda.max_memory_allocated(cuda_device)
+            if cuda_device is not None
+            else None
+        )
+        peak_mb = peak_allocated / 1024**2 if peak_allocated is not None else None
+        if peak_mb is not None:
+            overall_peak_mb = max(overall_peak_mb, peak_mb)
         row = {
             "epoch": epoch,
             "documents": documents,
             "steps": steps,
             "train_loss": loss_sum / steps if steps else float("nan"),
             "validation_loss": val_loss,
-            "wall_seconds": epoch_seconds,
-            "documents_per_second": documents / epoch_seconds,
+            "training_seconds": epoch_seconds,
+            "validation_seconds": validation_seconds,
+            "epoch_seconds": epoch_seconds + validation_seconds,
+            "training_documents_per_second": documents / epoch_seconds,
+            "validation_documents": validation_documents,
+            "validation_batches": validation_batches,
+            "peak_allocated_mb": peak_mb,
+            "incremental_peak_mb": (
+                (peak_allocated - start_allocated) / 1024**2
+                if peak_allocated is not None and start_allocated is not None
+                else None
+            ),
         }
         history.append(row)
         print(row)
         if val_loss < best_loss:
             best_loss = val_loss
+            best_epoch = epoch
             bundle.save(run_directory / "best")
 
+    synchronize()
+    loop_wall_seconds = time.perf_counter() - loop_started
     bundle.save(run_directory / "last")
     write_record(
         run_directory / "train.json",
         config={"task": task.name, **asdict(config)},
-        measurements={"best_validation_loss": best_loss, "epochs": history},
+        measurements={
+            "best_validation_loss": best_loss,
+            "best_epoch": best_epoch,
+            "fine_tuning_seconds": sum(row["epoch_seconds"] for row in history),
+            "loop_wall_seconds_including_best_checkpoints": loop_wall_seconds,
+            "peak_allocated_mb": overall_peak_mb if cuda_device is not None else None,
+            "epochs": history,
+        },
     )
     return run_directory

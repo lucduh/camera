@@ -20,7 +20,12 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=1440)
     parser.add_argument("--batch-size", type=int, default=1)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--limit", type=int, help="Smoke-test only: evaluate a prefix")
+    parser.add_argument("--limit", type=int, help="Evaluate only a prefix")
+    parser.add_argument(
+        "--profile",
+        action="store_true",
+        help="Record batch-one pipeline timings; requires --batch-size 1 --workers 0",
+    )
     parser.add_argument(
         "--max-new-tokens",
         type=int,
@@ -47,6 +52,7 @@ def main() -> None:
         workers=args.workers,
         max_new_tokens=max_new_tokens,
         limit=args.limit,
+        profile=args.profile,
         debug_output=args.debug_output,
     )
     path = write_record(
@@ -60,6 +66,7 @@ def main() -> None:
             "batch_size": args.batch_size,
             "workers": args.workers,
             "limit": args.limit,
+            "profile": args.profile,
             "max_new_tokens": max_new_tokens,
             "dtype": args.dtype,
             "device": device,

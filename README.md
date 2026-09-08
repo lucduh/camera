@@ -62,6 +62,8 @@ Use `--debug-output debug/...` only when predictions must be inspected. Debug fi
 
 ## Chapter 4 controlled experiments
 
+The complete command sequence is in [`scripts/ch04/README.md`](scripts/ch04/README.md).
+
 Record the architecture:
 
 ```bash

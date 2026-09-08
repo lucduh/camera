@@ -47,16 +47,17 @@ limitation to mention in the report, not a blocker for profiling.
 
 ## Chapter 4 — Computational characterization
 
-1. Architecture, parameter, token, window, and target-length inventory.
-2. Baseline fine-tuning and quality at the three resolution tiers.
-3. Real batch-one inference decomposition: preprocessing, transfer, encoder,
-   decoder, parsing, and wall time.
-4. Controlled resolution x output-length inference sweep.
-5. Batch-size latency, throughput, and memory sweep.
-6. Encoder-stage and decoder-component CUDA-event profile.
-7. Controlled training-step sweep: forward, backward, optimizer, and memory.
-8. Real training-pipeline profile including DataLoader wait and transfer.
-9. Historical/current/cached shifted-window mask reproduction.
+1. [Implemented] Architecture, parameter, token, window, and target-length inventory.
+2. [Implemented] Baseline fine-tuning, complete training timing, and quality evaluation.
+3. [Implemented] Real batch-one decomposition: preprocessing, transfer, encoder,
+   decoder, parsing, wall time, and memory.
+4. [Implemented] Controlled resolution x output-length inference sweep.
+5. [Implemented] Batch-size latency, throughput, and memory sweep.
+6. [Implemented] Encoder-stage and decoder-component CUDA-event profile.
+7. [Implemented] Controlled training-step sweep: forward, backward, gradient
+   clipping, optimizer, and memory.
+8. [Implemented] Analysis notebook and complete command runbook.
+9. [TBD] Historical/current/cached shifted-window mask reproduction.
 
 BR receives the complete grid. KPID and KPD remain represented by empty report
 table rows during this phase; their future runs only need quality and selected

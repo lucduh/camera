@@ -19,6 +19,19 @@ def timed(call: Callable[[], Any]) -> tuple[Any, float]:
     return result, (time.perf_counter() - start) * 1_000
 
 
+def summarize_ms(values: list[float]) -> dict:
+    if not values:
+        return {}
+    ordered = sorted(values)
+    p95_index = max(0, min(len(ordered) - 1, int(0.95 * len(ordered) + 0.999) - 1))
+    return {
+        "mean_ms": statistics.fmean(values),
+        "median_ms": statistics.median(values),
+        "p95_ms": ordered[p95_index],
+        "stdev_ms": statistics.stdev(values) if len(values) > 1 else 0.0,
+    }
+
+
 def benchmark(
     call: Callable[[], Any], *, warmups: int = 10, repetitions: int = 30
 ) -> dict:
@@ -28,14 +41,7 @@ def benchmark(
         call()
     synchronize()
     values = [timed(call)[1] for _ in range(repetitions)]
-    ordered = sorted(values)
-    return {
-        "raw_ms": values,
-        "mean_ms": statistics.fmean(values),
-        "median_ms": statistics.median(values),
-        "p95_ms": ordered[min(len(ordered) - 1, int(0.95 * len(ordered)))],
-        "stdev_ms": statistics.stdev(values) if len(values) > 1 else 0.0,
-    }
+    return {"raw_ms": values, **summarize_ms(values)}
 
 
 def cuda_memory(call: Callable[[], Any]) -> dict | None:
