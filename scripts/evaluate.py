@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from donut_camera.attention import PRESETS, apply_attention
 from donut_camera.evaluation import evaluate
 from donut_camera.model import load_bundle, resolve_device
 from donut_camera.records import write_record
@@ -32,6 +33,7 @@ def main() -> None:
         help="Defaults to max_new_tokens from the task configuration",
     )
     parser.add_argument("--dtype", choices=("bf16", "fp16", "fp32"), default="bf16")
+    parser.add_argument("--attention-backend", choices=PRESETS, default="baseline")
     parser.add_argument("--device")
     args = parser.parse_args()
 
@@ -43,6 +45,7 @@ def main() -> None:
         device=device,
         dtype=args.dtype,
     )
+    apply_attention(bundle.model, args.attention_backend)
     bundle.set_resolution(args.height, args.width)
     max_new_tokens = args.max_new_tokens or task.max_new_tokens
     measurements = evaluate(
@@ -69,6 +72,7 @@ def main() -> None:
             "profile": args.profile,
             "max_new_tokens": max_new_tokens,
             "dtype": args.dtype,
+            "attention_backend": args.attention_backend,
             "device": device,
         },
         measurements=measurements,

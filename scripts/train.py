@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 
+from donut_camera.attention import PRESETS
 from donut_camera.model import DEFAULT_MODEL, resolve_device
 from donut_camera.tasks import load_task
 from donut_camera.training import TrainingConfig, train
@@ -40,6 +41,7 @@ def main() -> None:
     parser.add_argument("--grad-clip", type=float, default=1.0)
     parser.add_argument("--precision", choices=("bf16", "fp32"), default="bf16")
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--attention-backend", choices=PRESETS, default="baseline")
     parser.add_argument("--device")
     args = parser.parse_args()
 
@@ -63,6 +65,7 @@ def main() -> None:
         warmup_steps=args.warmup_steps,
         grad_clip=args.grad_clip,
         precision=args.precision,
+        attention_backend=args.attention_backend,
         seed=args.seed,
         device=resolve_device(args.device),
     )

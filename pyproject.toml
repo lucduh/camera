@@ -11,6 +11,11 @@ dependencies = [
     "transformers==5.12.1",
 ]
 
+[project.optional-dependencies]
+fa4 = [
+    "flash-attn-4==4.0.0b15",
+]
+
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"

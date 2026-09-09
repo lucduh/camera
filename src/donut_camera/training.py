@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from transformers import get_linear_schedule_with_warmup
 
+from donut_camera.attention import apply_attention
 from donut_camera.data import DonutDataset, load_samples
 from donut_camera.model import autocast, load_bundle
 from donut_camera.records import write_record
@@ -37,6 +38,7 @@ class TrainingConfig:
     precision: str
     seed: int
     device: str
+    attention_backend: str = "baseline"
 
 
 def seed_everything(seed: int) -> None:
@@ -97,6 +99,7 @@ def train(task: TaskSpec, config: TrainingConfig) -> Path:
         dtype="fp32",
         training=True,
     )
+    apply_attention(bundle.model, config.attention_backend)
     bundle.set_resolution(config.height, config.width)
 
     train_data = DonutDataset(
