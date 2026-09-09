@@ -192,11 +192,43 @@ measurements for patch embedding, Swin stages 0--3, decoder layers 0--3, token
 embedding, and vocabulary projection. Use uninstrumented timings for absolute
 latency and component events only for attribution.
 
-## 9. Analysis
+## 9. Shifted-window mask reproduction
+
+Smoke test at the smallest resolution:
+
+```bash
+uv run python scripts/ch04/bench_mask.py \
+  --task "$TASK" \
+  --checkpoint "$CHECKPOINT" \
+  --output results/ch04/mask-smoke.json \
+  --resolutions 1280x960 \
+  --warmups 1 \
+  --repetitions 2 \
+  --dtype bf16
+```
+
+Final isolated and integrated comparison:
+
+```bash
+uv run python scripts/ch04/bench_mask.py \
+  --task "$TASK" \
+  --checkpoint "$CHECKPOINT" \
+  --output results/ch04/mask-reproduction.json \
+  --resolutions 1280x960,1920x1440,2560x1920 \
+  --batch-size 1 \
+  --warmups 3 \
+  --repetitions 10 \
+  --dtype bf16
+```
+
+The benchmark reproduces the Transformers 4.37.2 CPU-construction path inside
+the current model, invokes the actual 5.12.1 target-device method, and compares
+both with a per-model cache. It checks exact mask and encoder-output equality,
+measures cold and warm cache behavior, and records isolated mask and complete
+encoder latency. The historical result isolates the mask implementation; it is
+not presented as a benchmark of the complete Transformers 4.37.2 stack.
+
+## 10. Analysis
 
 Open `analysis/chapter04.ipynb` after copying the JSON records into
 `results/ch04/`. The notebook performs no model execution.
-
-The shifted-window mask anomaly remains explicitly TBD. Its eventual command
-will be added here only after the isolated reproduction is implemented and
-validated.

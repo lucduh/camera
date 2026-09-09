@@ -57,7 +57,7 @@ limitation to mention in the report, not a blocker for profiling.
 7. [Implemented] Controlled training-step sweep: forward, backward, gradient
    clipping, optimizer, and memory.
 8. [Implemented] Analysis notebook and complete command runbook.
-9. [TBD] Historical/current/cached shifted-window mask reproduction.
+9. [Implemented] Historical/current/cached shifted-window mask reproduction.
 
 BR receives the complete grid. KPID and KPD remain represented by empty report
 table rows during this phase; their future runs only need quality and selected
