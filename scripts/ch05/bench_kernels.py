@@ -17,9 +17,14 @@ def attention(q, k, v, mask, causal, backend):
             raise NotImplementedError("FA4 adapter does not support additive Swin bias")
         from flash_attn.cute import flash_attn_func
 
-        return flash_attn_func(
+        output = flash_attn_func(
             q.transpose(1, 2), k.transpose(1, 2), v.transpose(1, 2), causal=causal
-        ).transpose(1, 2)
+        )
+        # FA4 beta returns (attention_output, logsumexp), even when
+        # return_lse=False. Transformers performs the same tuple unwrapping.
+        if isinstance(output, tuple):
+            output = output[0]
+        return output.transpose(1, 2)
     context = nullcontext() if backend == "auto" else sdpa_kernel([BACKENDS[backend]])
     with context:
         return scaled_dot_product_attention(q, k, v, attn_mask=mask, is_causal=causal)
