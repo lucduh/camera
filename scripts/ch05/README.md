@@ -21,8 +21,15 @@ it counts these calls. Other cuDNN failures are not silently swallowed. This
 policy is an experimental control, not a claim about current cuDNN eligibility:
 the kernel sweep also tests pure cuDNN.
 
-FA4 is optional: `uv sync --extra fa4`. The extra pins flash-attn-4 to
-4.0.0b15. Its compatibility and performance still require validation on H100.
+FA4 is optional: `uv sync --extra fa4`. The working environment is pinned to
+`flash-attn-4==4.0.0b17` and `nvidia-cutlass-dsl==4.5.2`; newer CUTLASS DSL
+4.6 releases are incompatible with this FA4 beta. Check imports before a run:
+
+```bash
+uv run --extra fa4 python scripts/ch05/check_fa4.py
+```
+
+Its kernel compatibility and performance still require validation on H100.
 Omit `fa` if unavailable; do not substitute a different backend under that name.
 
 ## 1. Kernel regimes

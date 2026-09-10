@@ -13,7 +13,8 @@ dependencies = [
 
 [project.optional-dependencies]
 fa4 = [
-    "flash-attn-4==4.0.0b15",
+    "flash-attn-4==4.0.0b17",
+    "nvidia-cutlass-dsl==4.5.2",
 ]
 
 [build-system]

@@ -121,7 +121,12 @@ def main():
                     ),
                     memory=cuda_memory(call),
                 )
-            except (RuntimeError, ImportError, NotImplementedError) as error:
+            except (
+                RuntimeError,
+                ImportError,
+                NotImplementedError,
+                AttributeError,
+            ) as error:
                 row.update(
                     status="unavailable_or_failed", error_type=type(error).__name__
                 )

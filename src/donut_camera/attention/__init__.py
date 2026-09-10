@@ -2,9 +2,11 @@
 
 from functools import partial
 
+import torch
 from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers import AttentionInterface, AttentionMaskInterface
 from transformers.integrations.sdpa_attention import sdpa_attention_forward
+from transformers.utils import is_flash_attn_4_available
 
 from donut_camera.attention.encoder_sdpa import apply_encoder_sdpa, revert_encoder_sdpa
 from donut_camera.swin_mask import (
@@ -55,9 +57,18 @@ for _name in BACKENDS:
     AttentionMaskInterface.register(_implementation, AttentionMaskInterface["sdpa"])
 
 
+def fa_available() -> bool:
+    """Match the working ../donut availability gate."""
+    return torch.cuda.is_available() and is_flash_attn_4_available()
+
+
 def apply_attention(model, preset: str) -> None:
     if preset not in PRESETS:
         raise ValueError(f"Unknown attention preset: {preset}")
+    if preset == "fa" and not fa_available():
+        raise RuntimeError(
+            "FlashAttention-4 requires CUDA and the compatible fa4 extra"
+        )
     restore_attention(model)
     decoder = "eager"
     if preset.startswith("sdpa_"):
