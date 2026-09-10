@@ -15,6 +15,7 @@ from donut_camera.swin_mask import (
     historical_mask,
     install_cached_masks,
     install_mask_method,
+    padded_window_shape,
     restore_transformers_masks,
 )
 from donut_camera.tasks import load_task
@@ -45,14 +46,19 @@ def stage_shapes(model, image_height: int, image_width: int) -> list[dict]:
     for index, stage in enumerate(model.encoder.encoder.layers):
         shifted = [block for block in stage.blocks if block.shift_size > 0]
         representative = shifted[0]
-        windows = (height // representative.window_size) * (
-            width // representative.window_size
+        padded_height, padded_width = padded_window_shape(
+            height, width, representative.window_size
+        )
+        windows = (padded_height // representative.window_size) * (
+            padded_width // representative.window_size
         )
         stages.append(
             {
                 "stage": index,
-                "height": height,
-                "width": width,
+                "feature_height": height,
+                "feature_width": width,
+                "padded_height": padded_height,
+                "padded_width": padded_width,
                 "window_size": representative.window_size,
                 "shift_size": representative.shift_size,
                 "windows": windows,
@@ -66,8 +72,8 @@ def stage_shapes(model, image_height: int, image_width: int) -> list[dict]:
             }
         )
         if index < len(model.encoder.encoder.layers) - 1:
-            height //= 2
-            width //= 2
+            height = (height + 1) // 2
+            width = (width + 1) // 2
     return stages
 
 
@@ -82,7 +88,7 @@ def isolated_stage_profile(
     block = SimpleNamespace(
         window_size=stage["window_size"], shift_size=stage["shift_size"]
     )
-    arguments = (stage["height"], stage["width"], dtype, device)
+    arguments = (stage["padded_height"], stage["padded_width"], dtype, device)
     current_call = partial(DonutSwinLayer.get_attn_mask, block, *arguments)
     historical_call = partial(historical_mask, block, *arguments)
     cache = ShiftMaskCache()

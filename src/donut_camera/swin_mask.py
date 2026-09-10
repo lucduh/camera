@@ -13,6 +13,13 @@ MaskMethod = Callable[
 ]
 
 
+def padded_window_shape(height: int, width: int, window_size: int) -> tuple[int, int]:
+    """Return the grid size passed to shifted-window mask construction."""
+    padded_height = ((height + window_size - 1) // window_size) * window_size
+    padded_width = ((width + window_size - 1) // window_size) * window_size
+    return padded_height, padded_width
+
+
 def _partition(mask: torch.Tensor, window_size: int) -> torch.Tensor:
     _, height, width, channels = mask.shape
     windows = mask.view(

@@ -6,6 +6,7 @@ from donut_camera.swin_mask import (
     ShiftMaskCache,
     historical_mask,
     install_cached_masks,
+    padded_window_shape,
     restore_transformers_masks,
     target_device_mask,
 )
@@ -13,6 +14,17 @@ from donut_camera.swin_mask import (
 
 def block(*, shift_size: int = 5):
     return SimpleNamespace(window_size=10, shift_size=shift_size)
+
+
+def test_1920x1440_stage_three_is_padded_before_partitioning() -> None:
+    # 1920x1440 -> /4 patch embedding -> /8 across three merges = 60x45.
+    assert padded_window_shape(60, 45, 10) == (60, 50)
+    shifted = block()
+    mask = target_device_mask(
+        shifted, *padded_window_shape(60, 45, 10), torch.float32, torch.device("cpu")
+    )
+    assert mask is not None
+    assert mask.shape == (30, 100, 100)
 
 
 def test_mask_variants_are_exact_on_cpu() -> None:
